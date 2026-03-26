@@ -1,6 +1,9 @@
-import autosklearn.regression
-from sklearn.model_selection import train_test_split, GroupShuffleSplit
+import numpy as np
+from sklearn.model_selection import RandomizedSearchCV, train_test_split, GroupShuffleSplit
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Ridge, Lasso, ElasticNet
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
 def split_data(X, y, groups, test_size, seed):
     if groups is not None:
@@ -10,17 +13,54 @@ def split_data(X, y, groups, test_size, seed):
     else:
         return train_test_split(X, y, test_size=test_size, random_state=seed)
 
-def train_model(X_train, y_train, time_limit, per_run_time, seed):
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
+def get_model_space(seed):
+    return [
+        {
+            "model": [Ridge()],
+            "model__alpha": np.logspace(-3, 3, 50)
+        },
+        {
+            "model": [Lasso(max_iter=10000)],
+            "model__alpha": np.logspace(-4, 1, 50)
+        },
+        {
+            "model": [ElasticNet(max_iter=10000)],
+            "model__alpha": np.logspace(-4, 1, 30),
+            "model__l1_ratio": np.linspace(0.1, 0.9, 10)
+        },
+        {
+            "model": [RandomForestRegressor(random_state=seed)],
+            "model__n_estimators": [100, 200, 500],
+            "model__max_depth": [None, 5, 10, 20]
+        },
+        {
+            "model": [GradientBoostingRegressor(random_state=seed)],
+            "model__n_estimators": [100, 300],
+            "model__learning_rate": [0.01, 0.05, 0.1],
+            "model__max_depth": [3, 5]
+        }
+    ]
 
-    automl = autosklearn.regression.AutoSklearnRegressor(
-        time_left_for_this_task=time_limit,
-        per_run_time_limit=per_run_time,
+def train_model(X_train, y_train, seed, groups=None):
+
+    pipe = Pipeline([
+        ("scaler", StandardScaler()),
+        ("model", Ridge())  # placeholder
+    ])
+
+    param_dist = get_model_space(seed)
+
+    search = RandomizedSearchCV(
+        pipe,
+        param_distributions=param_dist,
+        n_iter=30,
+        scoring="r2",
+        cv=5 if groups is None else GroupShuffleSplit(n_splits=5, random_state=seed),
         n_jobs=-1,
-        seed=seed
+        random_state=seed,
+        verbose=1
     )
 
-    automl.fit(X_train_scaled, y_train)
+    search.fit(X_train, y_train)
 
-    return automl, scaler
+    return search.best_estimator_, search
