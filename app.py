@@ -7,9 +7,10 @@ from backend.data import preprocess_data
 from backend.model import split_data, train_model
 from backend.evaluation import evaluate, applicability_domain, bootstrap_ci
 from backend.plotting import parity_plot, williams_plot
+from backend.shap_analysis import compute_shap, shap_summary_plot
 from backend.utils import set_seed, save_model, save_log
 
-st.title("AutoML RT Prediction Platform")
+st.title("RT Prediction Platform (Sklearn AutoML)")
 
 file = st.file_uploader("Upload CSV")
 
@@ -17,65 +18,58 @@ if file:
     df = pd.read_csv(file)
 
     target = st.selectbox("Target", df.columns)
-    group = st.selectbox("Group (optional)", ["None"] + list(df.columns))
+    group = st.selectbox("Group column", ["None"] + list(df.columns))
 
-    seed = st.number_input("Random Seed", value=42)
+    seed = st.number_input("Random seed", value=42)
     set_seed(seed)
 
-    var_thresh = st.slider("Variance Threshold", 0.0, 0.2, 0.01)
-    corr_thresh = st.slider("Correlation Threshold", 0.7, 0.99, 0.95)
+    var_thresh = st.slider("Variance threshold", 0.0, 0.2, 0.01)
+    corr_thresh = st.slider("Correlation threshold", 0.7, 0.99, 0.95)
 
-    aim = st.text_area("Experiment Aim")
+    aim = st.text_area("Experiment aim")
 
-    if st.button("Run AutoML"):
+    if st.button("Train model"):
 
         X, y, var_sel, dropped = preprocess_data(df, target, var_thresh, corr_thresh)
-
         groups = df[group] if group != "None" else None
 
         X_train, X_test, y_train, y_test = split_data(X, y, groups, 0.2, seed)
 
-        model, scaler = train_model(X_train, y_train, 300, 30, seed)
+        model, search = train_model(X_train, y_train, seed)
 
-        results = evaluate(model, scaler, X_train, X_test, y_train, y_test)
+        results = evaluate(model, X_train, X_test, y_train, y_test)
 
         st.write(results)
 
-        # Applicability domain
-        h, h_star, std_res, flags = applicability_domain(
-            X_test, y_test, results["y_pred_test"]
-        )
-
         # Plots
         fig1 = parity_plot(y_test, results["y_pred_test"])
-        fig2 = williams_plot(h, std_res, h_star)
-
         st.pyplot(fig1)
+
+        h, h_star, std_res, flags = applicability_domain(X_test, y_test, results["y_pred_test"])
+        fig2 = williams_plot(h, std_res, h_star)
         st.pyplot(fig2)
 
-        # Confidence intervals
-        lower, upper = bootstrap_ci(model, scaler, X_train, y_train, X_test)
+        # SHAP
+        X_sample = X_test.sample(min(100, len(X_test)), random_state=seed)
+        shap_values = compute_shap(model, X_sample)
+        shap_fig = shap_summary_plot(shap_values, X_sample)
+        st.pyplot(shap_fig)
 
-        st.write("CI example:", list(zip(lower[:5], upper[:5])))
+        # CI
+        lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
 
-        # Save outputs
+        st.write("CI (first 5):", list(zip(lower[:5], upper[:5])))
+
+        # Save
         tmpdir = tempfile.mkdtemp()
-
         model_path = f"{tmpdir}/model.joblib"
         log_path = f"{tmpdir}/log.json"
 
-        save_model(model_path, {
-            "model": model,
-            "scaler": scaler,
-            "var_selector": var_sel,
-            "dropped_corr": dropped
-        })
-
+        save_model(model_path, {"model": model})
         save_log(log_path, {
             "aim": aim,
             "r2_train": results["r2_train"],
-            "r2_test": results["r2_test"],
-            "overfit": results["overfit"]
+            "r2_test": results["r2_test"]
         })
 
         zip_path = f"{tmpdir}/results.zip"
@@ -84,4 +78,4 @@ if file:
             z.write(log_path, "log.json")
 
         with open(zip_path, "rb") as f:
-            st.download_button("Download Results", f, "results.zip")
+            st.download_button("Download results", f, "results.zip")
