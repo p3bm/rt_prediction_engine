@@ -1,22 +1,17 @@
 import numpy as np
 from sklearn.metrics import r2_score
+from sklearn.base import clone
 
-def evaluate(model, scaler, X_train, X_test, y_train, y_test):
-    X_train_s = scaler.transform(X_train)
-    X_test_s = scaler.transform(X_test)
-
-    y_pred_train = model.predict(X_train_s)
-    y_pred_test = model.predict(X_test_s)
-
-    r2_train = r2_score(y_train, y_pred_train)
-    r2_test = r2_score(y_test, y_pred_test)
+def evaluate(model, X_train, X_test, y_train, y_test):
+    y_pred_train = model.predict(X_train)
+    y_pred_test = model.predict(X_test)
 
     return {
         "y_pred_train": y_pred_train,
         "y_pred_test": y_pred_test,
-        "r2_train": r2_train,
-        "r2_test": r2_test,
-        "overfit": r2_train - r2_test
+        "r2_train": r2_score(y_train, y_pred_train),
+        "r2_test": r2_score(y_test, y_pred_test),
+        "overfit": r2_score(y_train, y_pred_train) - r2_score(y_test, y_pred_test)
     }
 
 def leverage(X):
@@ -31,29 +26,26 @@ def applicability_domain(X, y_true, y_pred):
 
     n, p = X.shape
     h_star = 3 * (p + 1) / n
-
     std_res = residuals / np.std(residuals)
 
-    flags = []
-    for i in range(len(h)):
-        if h[i] > h_star:
-            flags.append("High leverage")
-        elif abs(std_res[i]) > 3:
-            flags.append("Outlier")
-        else:
-            flags.append("In domain")
+    flags = [
+        "In domain" if (h[i] <= h_star and abs(std_res[i]) <= 3)
+        else "Outlier" if abs(std_res[i]) > 3
+        else "High leverage"
+        for i in range(len(h))
+    ]
 
     return h, h_star, std_res, flags
 
-def bootstrap_ci(model, scaler, X_train, y_train, X_test, n_boot=50):
+def bootstrap_ci(model, X_train, y_train, X_test, n_boot=50):
     preds = []
     n = len(X_train)
 
     for _ in range(n_boot):
         idx = np.random.choice(n, n, replace=True)
-        X_s = scaler.fit_transform(X_train.iloc[idx])
-        model.fit(X_s, y_train.iloc[idx])
-        preds.append(model.predict(scaler.transform(X_test)))
+        m = clone(model)
+        m.fit(X_train.iloc[idx], y_train.iloc[idx])
+        preds.append(m.predict(X_test))
 
     preds = np.array(preds)
     return np.percentile(preds, 2.5, axis=0), np.percentile(preds, 97.5, axis=0)
