@@ -70,22 +70,43 @@ if file:
 
         st.write("CI (first 5):", list(zip(lower[:5], upper[:5])))
 
-        # Save
-        tmpdir = tempfile.mkdtemp()
-        model_path = f"{tmpdir}/model.joblib"
-        log_path = f"{tmpdir}/log.json"
+        from backend.utils import create_run_dir
+
+        run_dir = create_run_dir()
+        
+        model_path = f"{run_dir}/model.joblib"
+        log_path = f"{run_dir}/log.json"
+        parity_path = f"{run_dir}/parity.png"
+        williams_path = f"{run_dir}/williams.png"
+        shap_path = f"{run_dir}/shap.png"
+        cv_path = f"{run_dir}/cv_results.csv"
 
         save_model(model_path, {"model": model})
         save_log(log_path, {
             "aim": aim,
             "r2_train": results["r2_train"],
-            "r2_test": results["r2_test"]
+            "r2_test": results["r2_test"],
+            "overfit": results["overfit"],
+            "n_features": X.shape[1],
+            "dropped_corr": dropped,
+            "stratified_by": stratify if stratify != "None" else None,
+            "grouped_by": group if group != "None" else None,
+            "split_ratio": split_ratio
+            "seed": seed
         })
 
-        zip_path = f"{tmpdir}/results.zip"
-        with zipfile.ZipFile(zip_path, "w") as z:
-            z.write(model_path, "model.joblib")
-            z.write(log_path, "log.json")
+        fig1.savefig(parity_path, dpi=300)
+        fig2.savefig(williams_path, dpi=300)
+        shap_fig.savefig(shap_path, dpi=300)
 
+        cv_df = pd.DataFrame(search.cv_results_)
+        cv_df.to_csv(cv_path, index=False)
+
+        zip_path = f"{run_dir}.zip"
+
+        with zipfile.ZipFile(zip_path, "w") as z:
+            for file in os.listdir(run_dir):
+                z.write(os.path.join(run_dir, file), file)
+        
         with open(zip_path, "rb") as f:
             st.download_button("Download results", f, "results.zip")
