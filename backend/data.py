@@ -2,10 +2,6 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_selection import VarianceThreshold
 
-import pandas as pd
-import numpy as np
-from sklearn.feature_selection import VarianceThreshold
-
 def preprocess_data(df, target_col, drop_cols, var_thresh, corr_thresh):
 
     # Separate target
