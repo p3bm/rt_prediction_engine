@@ -19,6 +19,8 @@ if file:
 
     target = st.selectbox("Target", df.columns)
     group = st.selectbox("Group column", ["None"] + list(df.columns))
+    stratify = st.selectbox("Stratify by column (optional)", ["None"] + list(df.columns))
+    split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
 
     seed = st.number_input("Random seed", value=42)
     set_seed(seed)
@@ -31,9 +33,17 @@ if file:
     if st.button("Train model"):
 
         X, y, var_sel, dropped = preprocess_data(df, target, var_thresh, corr_thresh)
+        
         groups = df[group] if group != "None" else None
+        stratify_col = df[stratify] if stratify != "None" else None
 
-        X_train, X_test, y_train, y_test = split_data(X, y, groups, 0.2, seed)
+        X_train, X_test, y_train, y_test = split_data(
+            X, y,
+            groups,
+            stratify_col,
+            split_ratio,
+            seed
+        )
 
         model, search = train_model(X_train, y_train, seed)
 
