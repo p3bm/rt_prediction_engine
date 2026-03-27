@@ -110,7 +110,6 @@ if file:
             "overfit": results["overfit"],
             "n_features": X.shape[1],
             "manually_dropped_columns": drop_cols,
-            "dropped_corr": dropped,
             "stratified_by": stratify if stratify != "None" else None,
             "grouped_by": group if group != "None" else None,
             "split_ratio": split_ratio,
