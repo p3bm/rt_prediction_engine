@@ -21,19 +21,29 @@ def leverage(X):
     return np.diag(H)
 
 def applicability_domain(X, y_true, y_pred):
+    import numpy as np
+
+    # Ensure numpy arrays (CRITICAL FIX)
+    X = np.asarray(X)
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+
     h = leverage(X)
     residuals = y_true - y_pred
 
     n, p = X.shape
     h_star = 3 * (p + 1) / n
+
     std_res = residuals / np.std(residuals)
 
-    flags = [
-        "In domain" if (h[i] <= h_star and abs(std_res[i]) <= 3)
-        else "Outlier" if abs(std_res[i]) > 3
-        else "High leverage"
-        for i in range(len(h))
-    ]
+    flags = []
+    for i in range(len(h)):
+        if h[i] <= h_star and abs(std_res[i]) <= 3:
+            flags.append("In domain")
+        elif abs(std_res[i]) > 3:
+            flags.append("Outlier")
+        else:
+            flags.append("High leverage")
 
     return h, h_star, std_res, flags
 
