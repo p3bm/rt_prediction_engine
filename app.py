@@ -37,10 +37,26 @@ if file:
 
     if st.button("Train model"):
 
-        X, y, var_sel, dropped = preprocess_data(df, target, var_thresh, corr_thresh)
+        X, y, var_sel, dropped_corr = preprocess_data(
+            df,
+            target,
+            drop_cols,
+            var_thresh,
+            corr_thresh
+        )
         
         groups = df[group] if group != "None" else None
         stratify_col = df[stratify] if stratify != "None" else None
+
+        if target in drop_cols:
+            st.error("Target column cannot be dropped.")
+            st.stop()
+        
+        if group in drop_cols:
+            st.warning("Group column is excluded from features but still used for splitting.")
+        
+        if stratify in drop_cols:
+            st.warning("Stratify column is excluded from features but still used for splitting.")
 
         X_train, X_test, y_train, y_test = split_data(
             X, y,
@@ -93,11 +109,12 @@ if file:
             "r2_test": results["r2_test"],
             "overfit": results["overfit"],
             "n_features": X.shape[1],
+            "manually_dropped_columns": drop_cols,
             "dropped_corr": dropped,
             "stratified_by": stratify if stratify != "None" else None,
             "grouped_by": group if group != "None" else None,
-            "split_ratio": split_ratio
-            "seed": seed
+            "split_ratio": split_ratio,
+            "seed": seed,
         })
 
         fig1.savefig(parity_path, dpi=300)
