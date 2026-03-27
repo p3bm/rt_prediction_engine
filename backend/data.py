@@ -2,9 +2,20 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_selection import VarianceThreshold
 
-def preprocess_data(df, target_col, var_thresh, corr_thresh):
-    X = df.drop(columns=[target_col]).select_dtypes(include=[np.number])
+import pandas as pd
+import numpy as np
+from sklearn.feature_selection import VarianceThreshold
+
+def preprocess_data(df, target_col, drop_cols, var_thresh, corr_thresh):
+
+    # Separate target
     y = df[target_col]
+
+    # Drop user-selected columns from features ONLY
+    X = df.drop(columns=[target_col] + drop_cols, errors="ignore")
+
+    # Keep only numeric for modelling
+    X = X.select_dtypes(include=[np.number])
 
     # Variance filter
     var_sel = VarianceThreshold(var_thresh)
@@ -14,7 +25,8 @@ def preprocess_data(df, target_col, var_thresh, corr_thresh):
     # Correlation filter
     corr = X_var.corr().abs()
     upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
-    drop_cols = [col for col in upper.columns if any(upper[col] > corr_thresh)]
-    X_final = X_var.drop(columns=drop_cols)
+    drop_corr = [col for col in upper.columns if any(upper[col] > corr_thresh)]
 
-    return X_final, y, var_sel, drop_cols
+    X_final = X_var.drop(columns=drop_corr)
+
+    return X_final, y, var_sel, drop_corr
