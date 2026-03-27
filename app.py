@@ -10,7 +10,7 @@ from backend.plotting import parity_plot, williams_plot
 from backend.shap_analysis import compute_shap, shap_summary_plot
 from backend.utils import set_seed, save_model, save_log
 
-st.title("RT Prediction Platform (Sklearn AutoML)")
+st.title("RT Prediction Engine")
 
 file = st.file_uploader("Upload CSV")
 
