@@ -37,7 +37,7 @@ if file:
 
     if st.button("Train model"):
 
-        X, y, var_sel, dropped_corr = preprocess_data(
+        X, y, var_sel, dropped_corr, feature_names = preprocess_data(
             df,
             target,
             drop_cols,
