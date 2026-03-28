@@ -82,8 +82,14 @@ if file:
 
         # SHAP
         X_sample = X_test.sample(min(100, len(X_test)), random_state=seed)
-        shap_values = compute_shap(model, X_sample)
-        shap_fig = shap_summary_plot(shap_values, X_sample)
+        
+        shap_values, X_sample_named = compute_shap(
+            model,
+            X_sample,
+            feature_names
+        )
+        
+        shap_fig = shap_summary_plot(shap_values, X_sample_named)
         st.pyplot(shap_fig)
 
         # CI
