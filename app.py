@@ -129,7 +129,8 @@ if file:
 
         fig1.savefig(parity_path, dpi=300)
         fig2.savefig(williams_path, dpi=300)
-        shap_fig.savefig(shap_path, dpi=300)
+        if shap_toggle:
+            shap_fig.savefig(shap_path, dpi=300)
 
         cv_df = pd.DataFrame(search.cv_results_)
         cv_df.to_csv(cv_path, index=False)
