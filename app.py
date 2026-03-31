@@ -113,7 +113,7 @@ if file:
         save_model(model_path, {"model": model})
         save_log(log_path, {
             "aim": aim,
-            "dataset_filename": file,
+            "dataset_filename": file.name if file else None,
             "r2_train": results["r2_train"],
             "r2_test": results["r2_test"],
             "overfit": results["overfit"],
