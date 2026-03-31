@@ -8,7 +8,7 @@ from backend.model import split_data, train_model
 from backend.evaluation import evaluate, applicability_domain, bootstrap_ci
 from backend.plotting import parity_plot, williams_plot
 from backend.shap_analysis import compute_shap, shap_summary_plot
-from backend.utils import set_seed, save_model, save_log, create_run_dir
+from backend.utils import set_seed, save_model, save_log, create_run_dir, clean_params
 
 st.title("RT Prediction Engine")
 
@@ -119,7 +119,7 @@ if file:
             "overfit": results["overfit"],
             "n_features": X.shape[1],
             "model_type": str(model.named_steps["model"]),
-            "best_params": search.best_params_,
+            "best_params": clean_params(search.best_params_),
             "manually_dropped_columns": drop_cols,
             "stratified_by": stratify if stratify != "None" else None,
             "grouped_by": group if group != "None" else None,
