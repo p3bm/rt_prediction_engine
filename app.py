@@ -18,11 +18,11 @@ if file:
     df = pd.read_csv(file)
 
     target = st.selectbox("Target", df.columns)
-    group = st.selectbox("Group column", ["None"] + list(df.columns))
     drop_cols = st.multiselect(
         "Columns to exclude from modelling",
         [col for col in df.columns if col != target]
     )
+    group = st.selectbox("Group column", ["None"] + list(df.columns))
     stratify = st.selectbox("Stratify by column", ["None"] + list(df.columns))
     split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
 
