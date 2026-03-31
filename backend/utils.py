@@ -1,6 +1,7 @@
 import json
 import joblib
 import os
+import numpy as np
 from datetime import datetime
 
 def create_run_dir(base="results"):
