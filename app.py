@@ -8,7 +8,7 @@ from backend.model import split_data, train_model
 from backend.evaluation import evaluate, applicability_domain, bootstrap_ci
 from backend.plotting import parity_plot, williams_plot
 from backend.shap_analysis import compute_shap, shap_summary_plot
-from backend.utils import set_seed, save_model, save_log
+from backend.utils import set_seed, save_model, save_log, create_run_dir
 
 st.title("RT Prediction Engine")
 
@@ -19,19 +19,21 @@ if file:
 
     target = st.selectbox("Target", df.columns)
     group = st.selectbox("Group column", ["None"] + list(df.columns))
+    drop_cols = st.multiselect(
+        "Columns to exclude from modelling",
+        [col for col in df.columns if col != target]
+    )
     stratify = st.selectbox("Stratify by column", ["None"] + list(df.columns))
     split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
 
     seed = st.number_input("Random seed", value=42)
     set_seed(seed)
 
-    drop_cols = st.multiselect(
-        "Columns to exclude from modelling",
-        [col for col in df.columns if col != target]
-    )
-
     var_thresh = st.slider("Variance threshold", 0.0, 0.2, 0.01)
     corr_thresh = st.slider("Correlation threshold", 0.7, 0.99, 0.95)
+
+    shap_toggle = st.toggle("Perform SHAP Analysis")
+    ci_toggle = st.toggle("Calculate confidence interval (takes a long time)")
 
     aim = st.text_area("Experiment aim")
 
@@ -81,23 +83,22 @@ if file:
         st.pyplot(fig2)
 
         # SHAP
-        X_sample = X_test.sample(min(100, len(X_test)), random_state=seed)
-        
-        shap_values, X_sample_named = compute_shap(
-            model,
-            X_sample,
-            feature_names
-        )
-        
-        shap_fig = shap_summary_plot(shap_values, X_sample_named)
-        st.pyplot(shap_fig)
+            if shap_toggle:
+            X_sample = X_test.sample(min(100, len(X_test)), random_state=seed)
+            
+            shap_values, X_sample_named = compute_shap(
+                model,
+                X_sample,
+                feature_names
+            )
+            
+            shap_fig = shap_summary_plot(shap_values, X_sample_named)
+            st.pyplot(shap_fig)
 
         # CI
-        lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
-
-        st.write("CI (first 5):", list(zip(lower[:5], upper[:5])))
-
-        from backend.utils import create_run_dir
+        if ci_toggle:
+            lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
+            st.write("CI (first 5):", list(zip(lower[:5], upper[:5])))
 
         run_dir = create_run_dir()
         
@@ -105,7 +106,8 @@ if file:
         log_path = f"{run_dir}/log.json"
         parity_path = f"{run_dir}/parity.png"
         williams_path = f"{run_dir}/williams.png"
-        shap_path = f"{run_dir}/shap.png"
+        if shap_toggle:
+            shap_path = f"{run_dir}/shap.png"
         cv_path = f"{run_dir}/cv_results.csv"
 
         save_model(model_path, {"model": model})
