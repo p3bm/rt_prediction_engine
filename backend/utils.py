@@ -19,6 +19,16 @@ def set_seed(seed):
 def save_model(path, model_dict):
     joblib.dump(model_dict, path)
 
+def clean_params(params):
+    """Ensure model objects inside params are converted to strings."""
+    cleaned = {}
+    for k, v in params.items():
+        if hasattr(v, "__class__"):
+            cleaned[k] = str(v)
+        else:
+            cleaned[k] = v
+    return cleaned
+
 def make_json_serializable(obj):
     """
     Recursively convert objects into JSON-serializable types.
