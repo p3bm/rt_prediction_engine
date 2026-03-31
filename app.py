@@ -83,7 +83,7 @@ if file:
         st.pyplot(fig2)
 
         # SHAP
-            if shap_toggle:
+        if shap_toggle:
             X_sample = X_test.sample(min(100, len(X_test)), random_state=seed)
             
             shap_values, X_sample_named = compute_shap(
