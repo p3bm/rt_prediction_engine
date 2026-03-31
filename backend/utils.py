@@ -3,6 +3,7 @@ import joblib
 import os
 import numpy as np
 from datetime import datetime
+import random
 
 def create_run_dir(base="results"):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -11,8 +12,6 @@ def create_run_dir(base="results"):
     return path
 
 def set_seed(seed):
-    import numpy as np
-    import random
     np.random.seed(seed)
     random.seed(seed)
 
