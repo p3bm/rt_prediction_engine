@@ -8,7 +8,7 @@ def set_style():
     })
 
 def parity_plot(y_true, y_pred):
-    set_style()
+    #set_style()
     fig, ax = plt.subplots()
     ax.scatter(y_true, y_pred, color="blue", alpha=0.7)
     ax.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], "r--")
@@ -16,7 +16,7 @@ def parity_plot(y_true, y_pred):
     return fig
 
 def williams_plot(h, std_res, h_star):
-    set_style()
+    #set_style()
     fig, ax = plt.subplots()
 
     colors = [
