@@ -32,6 +32,9 @@ if file:
     var_thresh = st.slider("Variance threshold", 0.0, 0.2, 0.01)
     corr_thresh = st.slider("Correlation threshold", 0.7, 0.99, 0.95)
 
+    selected_models = st.multiselect("Select the models to use in the randomised search CV", ["ridge", "lasso", "elasticnet", "rf", "gbr"])
+    n_iter = st.number_input("Number of randomised search iterations", min_value=1, max_value=1000, value=30, step=1)
+
     shap_toggle = st.toggle("Perform SHAP Analysis")
     ci_toggle = st.toggle("Calculate confidence interval (takes a long time)")
 
@@ -68,7 +71,7 @@ if file:
             seed
         )
 
-        model, search = train_model(X_train, y_train, seed)
+        model, search = train_model(X_train, y_train, seed, selected_models=selected_models, n_iter=n_iter)
 
         results = evaluate(model, X_train, X_test, y_train, y_test)
 
@@ -134,12 +137,3 @@ if file:
 
         cv_df = pd.DataFrame(search.cv_results_)
         cv_df.to_csv(cv_path, index=False)
-
-        zip_path = f"{run_dir}.zip"
-
-        with zipfile.ZipFile(zip_path, "w") as z:
-            for file in os.listdir(run_dir):
-                z.write(os.path.join(run_dir, file), file)
-        
-        with open(zip_path, "rb") as f:
-            st.download_button("Download results", f, "results.zip")
