@@ -103,8 +103,7 @@ if file:
             lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
             st.write("CI (first 5):", list(zip(lower[:5], upper[:5])))
 
-        #run_dir = create_run_dir()
-        run_dir = tempfile.mkdtemp()
+        run_dir = create_run_dir()
         
         model_path = f"{run_dir}/model.joblib"
         log_path = f"{run_dir}/log.json"
@@ -145,11 +144,11 @@ if file:
         model_path = f"{tmpdir}/model.joblib"
         log_path = f"{tmpdir}/log.json"
 
-        zip_path = f"{run_dir}/results.zip"
+        #zip_path = f"{run_dir}/results.zip"
         
-        with zipfile.ZipFile(zip_path, "w") as z:
-            z.write(model_path, "model.joblib")
-            z.write(log_path, "log.json")
+        #with zipfile.ZipFile(zip_path, "w") as z:
+            #z.write(model_path, "model.joblib")
+            #z.write(log_path, "log.json")
 
-        with open(zip_path, "rb") as f:
-            st.download_button("Download results", f, "results.zip")
+        #with open(zip_path, "rb") as f:
+            #st.download_button("Download results", f, "results.zip")
