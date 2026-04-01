@@ -37,49 +37,98 @@ def split_data(X, y, groups, stratify_col, test_size, seed):
     else:
         return train_test_split(X, y, test_size=test_size, random_state=seed)
 
-def get_model_space(seed):
-    return [
-        {
+def get_model_space(seed, selected_models=None):
+    """
+    Build parameter space based on selected models.
+
+    selected_models: list of strings
+    Options:
+        "ridge", "lasso", "elasticnet", "rf", "gbr"
+    """
+
+    model_space = []
+
+    if selected_models is None:
+        selected_models = ["ridge", "lasso", "elasticnet", "rf", "gbr"]
+
+    if "ridge" in selected_models:
+        model_space.append({
             "model": [Ridge()],
             "model__alpha": np.logspace(-3, 3, 50)
-        },
-        {
+        })
+
+    if "lasso" in selected_models:
+        model_space.append({
             "model": [Lasso(max_iter=10000)],
             "model__alpha": np.logspace(-4, 1, 50)
-        },
-        {
+        })
+
+    if "elasticnet" in selected_models:
+        model_space.append({
             "model": [ElasticNet(max_iter=10000)],
             "model__alpha": np.logspace(-4, 1, 30),
             "model__l1_ratio": np.linspace(0.1, 0.9, 10)
-        },
-        {
+        })
+
+    if "rf" in selected_models:
+        model_space.append({
             "model": [RandomForestRegressor(random_state=seed)],
             "model__n_estimators": [100, 200, 500],
             "model__max_depth": [None, 5, 10, 20]
-        },
-        {
+        })
+
+    if "gbr" in selected_models:
+        model_space.append({
             "model": [GradientBoostingRegressor(random_state=seed)],
             "model__n_estimators": [100, 300],
             "model__learning_rate": [0.01, 0.05, 0.1],
             "model__max_depth": [3, 5]
-        }
-    ]
+        })
 
-def train_model(X_train, y_train, seed, groups=None):
+    if len(model_space) == 0:
+        raise ValueError("No valid models selected.")
+
+    return model_space
+
+
+# -----------------------------
+# Training
+# -----------------------------
+def train_model(
+    X_train,
+    y_train,
+    seed,
+    groups=None,
+    selected_models=None,
+    n_iter=30
+):
+    """
+    Train model using RandomizedSearchCV.
+
+    Parameters:
+        selected_models: list of model keys
+        n_iter: number of random search iterations
+    """
 
     pipe = Pipeline([
         ("scaler", StandardScaler()),
         ("model", Ridge())  # placeholder
     ])
 
-    param_dist = get_model_space(seed)
+    param_dist = get_model_space(seed, selected_models)
+
+    cv_strategy = (
+        GroupShuffleSplit(n_splits=5, random_state=seed)
+        if groups is not None
+        else 5
+    )
 
     search = RandomizedSearchCV(
         pipe,
         param_distributions=param_dist,
-        n_iter=60,
+        n_iter=n_iter,
         scoring="r2",
-        cv=5 if groups is None else GroupShuffleSplit(n_splits=5, random_state=seed),
+        cv=cv_strategy,
         n_jobs=-1,
         random_state=seed,
         verbose=1
