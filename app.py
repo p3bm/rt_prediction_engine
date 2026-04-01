@@ -148,7 +148,7 @@ if file:
             "r2_train": results["r2_train"],
             "r2_test": results["r2_test"],
             "n_features": X.shape[1],
-            "filters": filters 
+            "filters": filters ,
             "models_tested": selected_models,
             "no_of_iterations": n_iter,
             "best_model_type": str(model.named_steps["model"]),
