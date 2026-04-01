@@ -11,7 +11,6 @@ def evaluate(model, X_train, X_test, y_train, y_test):
         "y_pred_test": y_pred_test,
         "r2_train": r2_score(y_train, y_pred_train),
         "r2_test": r2_score(y_test, y_pred_test),
-        "overfit": r2_score(y_train, y_pred_train) - r2_score(y_test, y_pred_test)
     }
 
 def leverage(X):
@@ -24,9 +23,8 @@ def leverage(X):
     return np.diag(H)
 
 def applicability_domain(X, y_true, y_pred):
-    import numpy as np
 
-    # Ensure numpy arrays (CRITICAL FIX)
+    # Ensure numpy arrays
     X = np.asarray(X)
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
