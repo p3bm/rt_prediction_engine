@@ -120,7 +120,6 @@ if file:
             "dataset_filename": file.name if file else None,
             "r2_train": results["r2_train"],
             "r2_test": results["r2_test"],
-            "overfit": results["overfit"],
             "n_features": X.shape[1],
             "models_tested": selected_models,
             "no_of_iterations": n_iter,
