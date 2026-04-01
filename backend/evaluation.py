@@ -15,9 +15,12 @@ def evaluate(model, X_train, X_test, y_train, y_test):
     }
 
 def leverage(X):
-    X = np.array(X)
-    X = np.hstack([np.ones((X.shape[0], 1)), X])
-    H = X @ np.linalg.pinv(X.T @ X) @ X.T
+    X = np.asarray(X)
+    # Add intercept term
+    X_aug = np.hstack([np.ones((X.shape[0], 1)), X])
+    # Use pseudo-inverse 
+    XtX_inv = np.linalg.pinv(X_aug.T @ X_aug)
+    H = X_aug @ XtX_inv @ X_aug.T
     return np.diag(H)
 
 def applicability_domain(X, y_true, y_pred):
