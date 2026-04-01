@@ -13,6 +13,8 @@ def parity_plot(y_true, y_pred):
     ax.scatter(y_true, y_pred, color="blue", alpha=0.7)
     ax.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], "r--")
     ax.set_title("Parity Plot")
+    ax.set_xlabel("Experimental RRT")
+    ax.set_ylabel("Predicted RRT")
     return fig
 
 def williams_plot(h, std_res, h_star):
@@ -30,4 +32,6 @@ def williams_plot(h, std_res, h_star):
     ax.axhline(-3, linestyle="--")
 
     ax.set_title("Williams Plot")
+    ax.set_xlabel("Leverage")
+    ax.set_ylabel("Standardised Residual")
     return fig
