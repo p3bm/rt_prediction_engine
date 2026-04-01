@@ -111,7 +111,7 @@ if file:
         parity_path = f"{run_dir}/parity.png"
         williams_path = f"{run_dir}/williams.png"
         if shap_toggle:
-            #shap_path = f"{run_dir}/shap.png"
+            shap_path = f"{run_dir}/shap.png"
         cv_path = f"{run_dir}/cv_results.csv"
 
         save_model(model_path, {"model": model})
