@@ -81,7 +81,8 @@ if file:
         fig1 = parity_plot(y_test, results["y_pred_test"])
         st.pyplot(fig1)
 
-        h, h_star, std_res, flags = applicability_domain(X_test, y_test, results["y_pred_test"])
+        X_scaled = model.named_steps["scaler"].transform(X_test)
+        h, h_star, std_res, flags = applicability_domain(X_scaled, y_test, results["y_pred_test"])
         fig2 = williams_plot(h, std_res, h_star)
         st.pyplot(fig2)
 
