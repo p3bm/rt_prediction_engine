@@ -10,7 +10,7 @@ def set_style():
 def parity_plot(y_true, y_pred):
     #set_style()
     fig, ax = plt.subplots()
-    ax.scatter(y_true, y_pred, color="blue", alpha=0.7)
+    ax.scatter(y_true, y_pred, color="blue", alpha=0.5)
     ax.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], "r--")
     ax.set_title("Parity Plot")
     ax.set_xlabel("Experimental RRT")
@@ -26,7 +26,7 @@ def williams_plot(h, std_res, h_star):
         for i in range(len(h))
     ]
 
-    ax.scatter(h, std_res, c=colors)
+    ax.scatter(h, std_res, c=colors, alpha=0.5)
     ax.axvline(h_star, linestyle="--")
     ax.axhline(3, linestyle="--")
     ax.axhline(-3, linestyle="--")
