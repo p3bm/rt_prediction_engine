@@ -102,7 +102,7 @@ if file:
         results = evaluate(model, X_train, X_test, y_train, y_test)
 
         st.write(f"Training set R2: {results['r2_train']}")
-        st.write(f"Test set R2: {results['r2_train']}")
+        st.write(f"Test set R2: {results['r2_test']}")
 
         # Plots
         fig1 = parity_plot(y_test, results["y_pred_test"])
