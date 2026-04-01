@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import tempfile
 import zipfile
+import numpy as np
 
 from backend.data import preprocess_data
 from backend.model import split_data, train_model
@@ -16,12 +17,37 @@ file = st.file_uploader("Upload CSV")
 
 if file:
     df = pd.read_csv(file)
+    
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    filter_cols = st.multiselect("Select columns to filter data by", numeric_cols)
+
+    filters = []
+    for col in filter_cols:
+        col1, col2 = st.columns(2)
+        with col1:
+            operator = st.selectbox(f"Operator for {col}", [">", "=", "<"], key=f"op_{col}")
+        with col2:
+            value = st.number_input(f"Value for {col}", key=f"val_{col}")
+        filters.append((col, operator, value))
+    
+    # Apply filters
+    for col, op, val in filters:
+        if op == ">":
+            df = df[df[col] > val]
+        elif op == "=":
+            df = df[df[col] == val]
+        elif op == "<":
+            df = df[df[col] < val]
 
     target = st.selectbox("Target", df.columns)
     drop_cols = st.multiselect(
         "Columns to exclude from modelling",
         [col for col in df.columns if col != target]
     )
+
+    st.write("Data Preview:")
+    st.dataframe(df.head())
+    
     group = st.selectbox("Group column", ["None"] + list(df.columns))
     stratify = st.selectbox("Stratify by column", ["None"] + list(df.columns))
     split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
