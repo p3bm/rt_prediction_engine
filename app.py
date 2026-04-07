@@ -48,6 +48,10 @@ if file:
 
     st.write("Data Preview:")
     st.dataframe(df.head())
+
+    if st.toggle("Use fraction of training data"):
+        frac = st.number_input("Enter a fraction between 0 and 1", min_value=0.1, max_value=1.0, step=0.1, value=1.0)
+        df = df.sample(frac=frac, axis=0, ignore_index=True)
     
     group = st.selectbox("Group column", ["None"] + list(df.columns))
     stratify = st.selectbox("Stratify by column", ["None"] + list(df.columns))
