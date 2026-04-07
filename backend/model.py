@@ -137,3 +137,52 @@ def train_model(
     search.fit(X_train, y_train)
 
     return search.best_estimator_, search
+
+def fit_model_with_params(
+    X_train,
+    y_train,
+    seed,
+    model_key,
+    best_params,
+    scale=True
+):
+    """
+    Fit a model using a fixed set of parameters (no hyperparameter search).
+
+    Parameters:
+        model_key (str): one of ["ridge", "lasso", "elasticnet", "rf", "gbr"]
+        best_params (dict): parameters from RandomizedSearchCV (search.best_params_)
+        scale (bool): whether to include StandardScaler in pipeline
+
+    Returns:
+        fitted pipeline
+    """
+
+    # Map model key to actual model
+    model_map = {
+        "ridge": Ridge(),
+        "lasso": Lasso(max_iter=10000),
+        "elasticnet": ElasticNet(max_iter=10000),
+        "rf": RandomForestRegressor(random_state=seed),
+        "gbr": GradientBoostingRegressor(random_state=seed),
+    }
+
+    if model_key not in model_map:
+        raise ValueError(f"Invalid model_key: {model_key}")
+
+    # Build pipeline
+    steps = []
+    if scale:
+        steps.append(("scaler", StandardScaler()))
+
+    steps.append(("model", model_map[model_key]))
+
+    pipe = Pipeline(steps)
+
+    # Apply parameters (must match pipeline format, e.g. model__alpha)
+    pipe.set_params(**best_params)
+
+    # Fit model
+    pipe.fit(X_train, y_train)
+
+    return pipe
