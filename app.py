@@ -71,6 +71,9 @@ if file:
     if mode == "Random Search":
         selected_models = st.multiselect("Select the models to use in the randomised search CV", ["ridge", "lasso", "elasticnet", "rf", "gbr"])
         n_iter = st.number_input("Number of randomised search iterations", min_value=1, max_value=1000, value=30, step=1)
+    else:
+        selected_models = None
+        n_iter = None
 
     if mode == "Use fixed parameters":
         model_choice = st.selectbox(
