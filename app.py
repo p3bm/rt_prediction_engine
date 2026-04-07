@@ -3,9 +3,10 @@ import pandas as pd
 import tempfile
 import zipfile
 import numpy as np
+import json
 
 from backend.data import preprocess_data
-from backend.model import split_data, train_model
+from backend.model import split_data, train_model, fit_model_with_params
 from backend.evaluation import evaluate, applicability_domain, bootstrap_ci
 from backend.plotting import parity_plot, williams_plot
 from backend.shap_analysis import compute_shap, shap_summary_plot
@@ -58,9 +59,32 @@ if file:
     var_thresh = st.slider("Variance threshold", 0.0, 0.2, 0.01)
     corr_thresh = st.slider("Correlation threshold", 0.7, 0.99, 0.95)
 
-    selected_models = st.multiselect("Select the models to use in the randomised search CV", ["ridge", "lasso", "elasticnet", "rf", "gbr"])
-    n_iter = st.number_input("Number of randomised search iterations", min_value=1, max_value=1000, value=30, step=1)
+    mode = st.radio(
+            "Training mode",
+            ["Random Search", "Use fixed parameters"]
+        )
 
+    if mode == "Random Search":
+        selected_models = st.multiselect("Select the models to use in the randomised search CV", ["ridge", "lasso", "elasticnet", "rf", "gbr"])
+        n_iter = st.number_input("Number of randomised search iterations", min_value=1, max_value=1000, value=30, step=1)
+
+    if mode == "Use fixed parameters":
+        model_choice = st.selectbox(
+            "Select model",
+            ["ridge", "lasso", "elasticnet", "rf", "gbr"]
+        )
+    
+        params_input = st.text_area(
+            "Enter model parameters (JSON format)",
+            value='{\n  "model__alpha": 1.0\n}'
+        )
+    
+        try:
+            best_params = json.loads(params_input)
+        except Exception as e:
+            st.error(f"Invalid JSON: {e}")
+            st.stop()
+    
     shap_toggle = st.toggle("Perform SHAP Analysis")
     ci_toggle = st.toggle("Calculate confidence interval (takes a long time)")
 
@@ -97,7 +121,26 @@ if file:
             seed
         )
 
-        model, search = train_model(X_train, y_train, seed, selected_models=selected_models, n_iter=n_iter)
+        if mode == "Random Search":
+            model, search = train_model(
+                X_train,
+                y_train,
+                seed,
+                selected_models=selected_models,
+                n_iter=n_iter
+            )
+            best_params_clean = clean_params(search.best_params_)
+        
+        else:
+            model = fit_model_with_params(
+                X_train,
+                y_train,
+                seed,
+                model_key=model_choice,
+                best_params=best_params
+            )
+            search = None
+            best_params_clean = best_params
 
         results = evaluate(model, X_train, X_test, y_train, y_test)
 
@@ -129,7 +172,10 @@ if file:
         # CI
         if ci_toggle:
             lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
-            st.write("CI (first 5):", list(zip(lower[:5], upper[:5])))
+            ci_first_five = list(zip(lower[:5], upper[:5]))
+            st.write("CI (first 5):", ci_first_five)
+        else:
+            ci_first_five = None
 
         run_dir = create_run_dir()
         
@@ -137,9 +183,13 @@ if file:
         log_path = f"{run_dir}/log.json"
         parity_path = f"{run_dir}/parity.png"
         williams_path = f"{run_dir}/williams.png"
+        cv_path = f"{run_dir}/cv_results.csv"
+
         if shap_toggle:
             shap_path = f"{run_dir}/shap.png"
-        cv_path = f"{run_dir}/cv_results.csv"
+        if search is not None:
+            cv_df = pd.DataFrame(search.cv_results_)
+            cv_df.to_csv(cv_path, index=False)
 
         save_model(model_path, {"model": model})
         save_log(log_path, {
@@ -152,7 +202,8 @@ if file:
             "models_tested": selected_models,
             "no_of_iterations": n_iter,
             "best_model_type": str(model.named_steps["model"]),
-            "best_params": clean_params(search.best_params_),
+            "best_params": best_params_clean,
+            "CI (first 5)": ci_first_five,
             "manually_dropped_columns": drop_cols,
             "stratified_by": stratify if stratify != "None" else None,
             "grouped_by": group if group != "None" else None,
@@ -164,19 +215,3 @@ if file:
         fig2.savefig(williams_path, dpi=300)
         if shap_toggle:
             shap_fig.savefig(shap_path, dpi=300)
-
-        cv_df = pd.DataFrame(search.cv_results_)
-        cv_df.to_csv(cv_path, index=False)
-
-        tmpdir = tempfile.mkdtemp()
-        model_path = f"{tmpdir}/model.joblib"
-        log_path = f"{tmpdir}/log.json"
-
-        #zip_path = f"{run_dir}/results.zip"
-        
-        #with zipfile.ZipFile(zip_path, "w") as z:
-            #z.write(model_path, "model.joblib")
-            #z.write(log_path, "log.json")
-
-        #with open(zip_path, "rb") as f:
-            #st.download_button("Download results", f, "results.zip")
