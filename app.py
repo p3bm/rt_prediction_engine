@@ -186,10 +186,13 @@ if file:
         # CI
         if ci_toggle:
             lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
-            ci_first_five = list(zip(lower[:5], upper[:5]))
-            st.write("CI (first 5):", ci_first_five)
+            mean_ci_width = np.mean(ci_width)
+            rel_uncertainty = ci_width / np.abs(results["y_pred_test"])
+            st.write("Mean CI width:", mean_ci_width)
+            st.write("Relative uncertainty:", rel_uncertainty)
         else:
-            ci_first_five = None
+            mean_ci_width = None
+            rel_uncertainty = None
 
         run_dir = create_run_dir()
         
@@ -217,7 +220,8 @@ if file:
             "no_of_iterations": n_iter,
             "best_model_type": str(model.named_steps["model"]),
             "best_params": best_params_clean,
-            "CI (first 5)": ci_first_five,
+            "Mean CI width": mean_ci_width,
+            "Relative uncertainty": rel_uncertainty,
             "manually_dropped_columns": drop_cols,
             "stratified_by": stratify if stratify != "None" else None,
             "grouped_by": group if group != "None" else None,
