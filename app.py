@@ -73,17 +73,24 @@ if file:
             "Select model",
             ["ridge", "lasso", "elasticnet", "rf", "gbr"]
         )
+
+        log_file = st.file_uploader("Upload previous log.json (optional)", type="json")
     
         params_input = st.text_area(
             "Enter model parameters (JSON format)",
             value='{\n  "model__alpha": 1.0\n}'
         )
-    
-        try:
-            best_params = json.loads(params_input)
-        except Exception as e:
-            st.error(f"Invalid JSON: {e}")
-            st.stop()
+
+        if log_file:
+            log_data = json.load(log_file)
+            best_params = log_data.get("best_params", {})
+            st.write("Loaded parameters:", best_params)
+        else:
+            try:
+                best_params = json.loads(params_input)
+            except Exception as e:
+                st.error(f"Invalid JSON: {e}")
+                st.stop()
     
     shap_toggle = st.toggle("Perform SHAP Analysis")
     ci_toggle = st.toggle("Calculate confidence interval (takes a long time)")
