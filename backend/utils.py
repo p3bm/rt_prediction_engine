@@ -27,7 +27,7 @@ def clean_params(params):
             cleaned[k] = str(v)
         else:
             cleaned[k] = v
-    return cleaned
+    return {k: v for k, v in cleaned.items() if k != "model"}
 
 def make_json_serializable(obj):
     """
