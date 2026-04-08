@@ -132,15 +132,6 @@ if file:
         if stratify in drop_cols:
             st.warning("Stratify column is excluded from features but still used for splitting.")
 
-        X_train, y_train, var_sel, drop_corr, feature_names = fit_preprocessing(
-            train_df, target_col, drop_cols, var_thresh, corr_thresh
-        )
-        
-        # 3. Apply preprocessing to TEST
-        X_test, y_test = transform_preprocessing(
-            test_df, target_col, drop_cols, var_sel, drop_corr, feature_names
-        )
-
         if split_mode == "Traditional":
             y = df[target_col]
             
