@@ -67,7 +67,7 @@ if file:
         group = None
         stratify = None
         split_ratio = None
-        split_col = st.select("Select column to split data by", numeric_cols)
+        split_col = st.selectbox("Select column to split data by", numeric_cols)
 
     seed = st.number_input("Random seed", value=42)
     set_seed(seed)
