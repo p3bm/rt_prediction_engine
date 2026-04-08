@@ -64,8 +64,8 @@ if file:
         split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
         split_col = None
     else:
-        group = None
-        stratify = None
+        group = "None"
+        stratify = "None"
         split_ratio = None
         split_col = st.selectbox("Select column to split data by", numeric_cols)
 
@@ -248,7 +248,7 @@ if file:
             "r2_test": results["r2_test"],
             "rmse_train": results["rmse_train"],
             "rmse_test": results["rmse_test"],
-            "n_features": X.shape[1],
+            "n_features": X_train_proc.shape[1],
             "filters": filters ,
             "split_mode": split_mode,
             "split_col": split_col,
