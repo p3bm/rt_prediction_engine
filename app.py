@@ -69,7 +69,8 @@ if file:
         )
 
     if mode == "Random Search":
-        selected_models = st.multiselect("Select the models to use in the randomised search CV", ["ridge", "lasso", "elasticnet", "rf", "gbr"])
+        selected_models = st.multiselect("Select the models to use in the randomised search CV",
+                                         ["ridge", "lasso", "elasticnet", "rf", "gbr", "lgbm", "catboost"])
         n_iter = st.number_input("Number of randomised search iterations", min_value=1, max_value=1000, value=30, step=1)
     else:
         selected_models = None
@@ -78,7 +79,7 @@ if file:
     if mode == "Use fixed parameters":
         model_choice = st.selectbox(
             "Select model",
-            ["ridge", "lasso", "elasticnet", "rf", "gbr"]
+            ["ridge", "lasso", "elasticnet", "rf", "gbr", "lgbm", "catboost"]
         )
 
         log_file = st.file_uploader("Upload previous log.json (optional)", type="json")
