@@ -133,9 +133,9 @@ if file:
             st.warning("Stratify column is excluded from features but still used for splitting.")
 
         if split_mode == "Traditional":
-            y = df[target_col]
+            y = df[target]
             
-            X = df.drop(columns=[target_col] + drop_cols, errors="ignore")
+            X = df.drop(columns=[target] + drop_cols, errors="ignore")
             X = X.select_dtypes(include=[np.number])
             
             X_train, X_test, y_train, y_test = split_data(
@@ -146,23 +146,23 @@ if file:
                 seed
             )
 
-            X_train_proc, var_sel, drop_corr, feature_names = fit_preprocessing(X_train, target_col, drop_cols, var_thresh, corr_thresh)
-            X_test_proc = transform_preprocessing(X_test, target_col, drop_cols, var_sel, drop_corr, feature_names)
+            X_train_proc, var_sel, drop_corr, feature_names = fit_preprocessing(X_train, target, drop_cols, var_thresh, corr_thresh)
+            X_test_proc = transform_preprocessing(X_test, target, drop_cols, var_sel, drop_corr, feature_names)
             
         else:
             train_df, test_df = custom_flag_split(df, flag_col=split_col)
 
-            y_train = train_df[target_col]
-            y_test = test_df[target_col]
+            y_train = train_df[target]
+            y_test = test_df[target]
 
-            X_train = train_df.drop(columns=[target_col] + drop_cols, errors="ignore")
+            X_train = train_df.drop(columns=[target] + drop_cols, errors="ignore")
             X_train = X_train.select_dtypes(include=[np.number])
 
-            X_test = test_df.drop(columns=[target_col] + drop_cols, errors="ignore")
+            X_test = test_df.drop(columns=[target] + drop_cols, errors="ignore")
             X_test = X_test.select_dtypes(include=[np.number])
 
-            X_train_proc, var_sel, drop_corr, feature_names = fit_preprocessing(X_train, target_col, drop_cols, var_thresh, corr_thresh)
-            X_test_proc = transform_preprocessing(X_test, target_col, drop_cols, var_sel, drop_corr, feature_names)
+            X_train_proc, var_sel, drop_corr, feature_names = fit_preprocessing(X_train, target, drop_cols, var_thresh, corr_thresh)
+            X_test_proc = transform_preprocessing(X_test, target, drop_cols, var_sel, drop_corr, feature_names)
 
         if mode == "Random Search":
             model, search = train_model(
