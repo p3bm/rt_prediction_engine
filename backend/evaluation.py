@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.base import clone
 
 def evaluate(model, X_train, X_test, y_train, y_test):
@@ -11,6 +11,8 @@ def evaluate(model, X_train, X_test, y_train, y_test):
         "y_pred_test": y_pred_test,
         "r2_train": r2_score(y_train, y_pred_train),
         "r2_test": r2_score(y_test, y_pred_test),
+        "rmse_train": np.sqrt(mean_squared_error(y_train, y_pred_train)),
+        "rmse_test": np.sqrt(mean_squared_error(y_test, y_pred_test)),
     }
 
 def leverage(X):
