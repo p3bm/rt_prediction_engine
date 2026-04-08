@@ -52,10 +52,18 @@ if file:
     if st.toggle("Use fraction of training data"):
         frac = st.number_input("Enter a fraction between 0 and 1", min_value=0.1, max_value=1.0, step=0.1, value=1.0)
         df = df.sample(frac=frac, axis=0, ignore_index=True)
-    
-    group = st.selectbox("Group column", ["None"] + list(df.columns))
-    stratify = st.selectbox("Stratify by column", ["None"] + list(df.columns))
-    split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
+
+    split_mode = st.radio(
+            "Splitting mode",
+            ["Traditional", "Custom"]
+        )
+
+    if split_mode == "Traditional":
+        group = st.selectbox("Group column", ["None"] + list(df.columns))
+        stratify = st.selectbox("Stratify by column", ["None"] + list(df.columns))
+        split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
+    else:
+        split_cols = st.multiselect("Select columns to split data by", numeric_cols)
 
     seed = st.number_input("Random seed", value=42)
     set_seed(seed)
@@ -128,13 +136,16 @@ if file:
         if stratify in drop_cols:
             st.warning("Stratify column is excluded from features but still used for splitting.")
 
-        X_train, X_test, y_train, y_test = split_data(
-            X, y,
-            groups,
-            stratify_col,
-            split_ratio,
-            seed
-        )
+        if split_mode == "Traditional":
+            X_train, X_test, y_train, y_test = split_data(
+                X, y,
+                groups,
+                stratify_col,
+                split_ratio,
+                seed
+            )
+        else:
+            st.error("Still working on it...")
 
         if mode == "Random Search":
             model, search = train_model(
