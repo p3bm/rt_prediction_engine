@@ -63,11 +63,14 @@ if file:
         stratify = st.selectbox("Stratify by column", ["None"] + list(df.columns))
         split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
         split_col = None
+        split_frac = None
     else:
         group = "None"
         stratify = "None"
         split_ratio = None
         split_col = st.selectbox("Select column to split data by", numeric_cols)
+        split_frac = st.number_input(f"What fraction of {split_col} split data to add back to training set?",
+                                     min_value=0.0, max_value=0.9, step=0.1, value=0.0)
 
     seed = st.number_input("Random seed", value=42)
     set_seed(seed)
@@ -151,6 +154,11 @@ if file:
             
         else:
             train_df, test_df = custom_flag_split(df, flag_col=split_col)
+
+            if split_frac != 0.0:
+                train_df_additional = test_df.sample(frac=split_frac, random_state=seed)
+                test_df = test_df.drop(train_df_additional.index)
+                train_df = pd.concat((train_df,train_df_additional), axis=0)
 
             y_train = train_df[target]
             y_test = test_df[target]
