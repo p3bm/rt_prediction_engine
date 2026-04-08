@@ -4,6 +4,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Ridge, Lasso, ElasticNet
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from lightgbm import LGBMRegressor
+from catboost import CatBoostRegressor
 import pandas as pd
 
 def stratified_split(X, y, stratify_col, test_size, seed, n_bins=10):
@@ -43,7 +45,7 @@ def get_model_space(seed, selected_models=None):
 
     selected_models: list of strings
     Options:
-        "ridge", "lasso", "elasticnet", "rf", "gbr"
+        "ridge", "lasso", "elasticnet", "rf", "gbr", "lgbm", "catboost"
     """
 
     model_space = []
@@ -83,6 +85,27 @@ def get_model_space(seed, selected_models=None):
             "model__n_estimators": [100, 300],
             "model__learning_rate": [0.01, 0.05, 0.1],
             "model__max_depth": [3, 5]
+        })
+
+    if "lgbm" in selected_models:
+        model_space.append({
+            "model": [LGBMRegressor(random_state=seed, verbose=-1)],
+            "model__n_estimators": [200, 500, 1000],
+            "model__learning_rate": [0.01, 0.05, 0.1],
+            "model__max_depth": [-1, 5, 10],
+            "model__num_leaves": [31, 64, 128],
+            "model__subsample": [0.7, 0.9, 1.0],
+            "model__colsample_bytree": [0.7, 0.9, 1.0]
+        })
+    
+    if "catboost" in selected_models:
+        model_space.append({
+            "model": [CatBoostRegressor(random_state=seed, verbose=0)],
+            "model__iterations": [300, 600, 1000],
+            "model__learning_rate": [0.01, 0.05, 0.1],
+            "model__depth": [4, 6, 8],
+            "model__l2_leaf_reg": [1, 3, 5, 7],
+            "model__bagging_temperature": [0, 1, 5]
         })
 
     if len(model_space) == 0:
@@ -165,6 +188,8 @@ def fit_model_with_params(
         "elasticnet": ElasticNet(max_iter=10000),
         "rf": RandomForestRegressor(random_state=seed),
         "gbr": GradientBoostingRegressor(random_state=seed),
+        "lgbm": LGBMRegressor(random_state=seed, verbose=-1),
+        "catboost": CatBoostRegressor(random_state=seed, verbose=0),
     }
 
     if model_key not in model_map:
