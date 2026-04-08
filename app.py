@@ -5,7 +5,7 @@ import zipfile
 import numpy as np
 import json
 
-from backend.data import preprocess_data
+from backend.data import custom_flag_split, fit_preprocessing, transform_preprocessing
 from backend.model import split_data, train_model, fit_model_with_params
 from backend.evaluation import evaluate, applicability_domain, bootstrap_ci
 from backend.plotting import parity_plot, williams_plot
@@ -62,8 +62,12 @@ if file:
         group = st.selectbox("Group column", ["None"] + list(df.columns))
         stratify = st.selectbox("Stratify by column", ["None"] + list(df.columns))
         split_ratio = st.number_input("Split ratio", min_value=0.10, max_value=1.00, value=0.2, step=0.05)
+        split_col = None
     else:
-        split_cols = st.multiselect("Select columns to split data by", numeric_cols)
+        group = None
+        stratify = None
+        split_ratio = None
+        split_col = st.select("Select column to split data by", numeric_cols)
 
     seed = st.number_input("Random seed", value=42)
     set_seed(seed)
@@ -114,14 +118,6 @@ if file:
     aim = st.text_area("Experiment aim")
 
     if st.button("Train model"):
-
-        X, y, var_sel, dropped_corr, feature_names = preprocess_data(
-            df,
-            target,
-            drop_cols,
-            var_thresh,
-            corr_thresh
-        )
         
         groups = df[group] if group != "None" else None
         stratify_col = df[stratify] if stratify != "None" else None
@@ -136,7 +132,21 @@ if file:
         if stratify in drop_cols:
             st.warning("Stratify column is excluded from features but still used for splitting.")
 
+        X_train, y_train, var_sel, drop_corr, feature_names = fit_preprocessing(
+            train_df, target_col, drop_cols, var_thresh, corr_thresh
+        )
+        
+        # 3. Apply preprocessing to TEST
+        X_test, y_test = transform_preprocessing(
+            test_df, target_col, drop_cols, var_sel, drop_corr, feature_names
+        )
+
         if split_mode == "Traditional":
+            y = df[target_col]
+            
+            X = df.drop(columns=[target_col] + drop_cols, errors="ignore")
+            X = X.select_dtypes(include=[np.number])
+            
             X_train, X_test, y_train, y_test = split_data(
                 X, y,
                 groups,
@@ -144,13 +154,29 @@ if file:
                 split_ratio,
                 seed
             )
+
+            X_train_proc, var_sel, drop_corr, feature_names = fit_preprocessing(X_train, target_col, drop_cols, var_thresh, corr_thresh)
+            X_test_proc = transform_preprocessing(X_test, target_col, drop_cols, var_sel, drop_corr, feature_names)
+            
         else:
-            st.error("Still working on it...")
+            train_df, test_df = custom_flag_split(df, flag_col=split_col)
+
+            y_train = train_df[target_col]
+            y_test = test_df[target_col]
+
+            X_train = train_df.drop(columns=[target_col] + drop_cols, errors="ignore")
+            X_train = X_train.select_dtypes(include=[np.number])
+
+            X_test = test_df.drop(columns=[target_col] + drop_cols, errors="ignore")
+            X_test = X_test.select_dtypes(include=[np.number])
+
+            X_train_proc, var_sel, drop_corr, feature_names = fit_preprocessing(X_train, target_col, drop_cols, var_thresh, corr_thresh)
+            X_test_proc = transform_preprocessing(X_test, target_col, drop_cols, var_sel, drop_corr, feature_names)
 
         if mode == "Random Search":
             model, search = train_model(
-                X_train,
-                y_train,
+                X_train_proc,
+                y_train_proc,
                 seed,
                 selected_models=selected_models,
                 n_iter=n_iter
@@ -159,8 +185,8 @@ if file:
         
         else:
             model = fit_model_with_params(
-                X_train,
-                y_train,
+                X_train_proc,
+                y_train_proc,
                 seed,
                 model_key=model_choice,
                 best_params=best_params
@@ -168,7 +194,7 @@ if file:
             search = None
             best_params_clean = best_params
 
-        results = evaluate(model, X_train, X_test, y_train, y_test)
+        results = evaluate(model, X_train_proc, X_test_proc, y_train_proc, y_test_proc)
 
         st.write(f"Training set RMSE: {results['rmse_train']}")
         st.write(f"Test set RMSE: {results['rmse_test']}")
@@ -176,17 +202,17 @@ if file:
         st.write(f"Test set R2: {results['r2_test']}")
 
         # Plots
-        fig1 = parity_plot(y_test, results["y_pred_test"])
+        fig1 = parity_plot(y_test_proc, results["y_pred_test"])
         st.pyplot(fig1)
 
-        X_scaled = model.named_steps["scaler"].transform(X_test)
-        h, h_star, std_res, flags = applicability_domain(X_scaled, y_test, results["y_pred_test"])
+        X_scaled = model.named_steps["scaler"].transform(X_test_proc)
+        h, h_star, std_res, flags = applicability_domain(X_scaled, y_test_proc, results["y_pred_test"])
         fig2 = williams_plot(h, std_res, h_star)
         st.pyplot(fig2)
 
         # SHAP
         if shap_toggle:
-            X_sample = X_test.sample(min(100, len(X_test)), random_state=seed)
+            X_sample = X_test_proc.sample(min(100, len(X_test_proc)), random_state=seed)
             
             shap_values, X_sample_named = compute_shap(
                 model,
@@ -199,7 +225,7 @@ if file:
 
         # CI
         if ci_toggle:
-            lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
+            lower, upper = bootstrap_ci(model, X_train_proc, y_train_proc, X_test_proc)
             ci_width = upper - lower
             mean_ci_width = np.mean(ci_width)
             rel_uncertainty = ci_width / np.abs(results["y_pred_test"])
@@ -233,6 +259,8 @@ if file:
             "rmse_test": results["rmse_test"],
             "n_features": X.shape[1],
             "filters": filters ,
+            "split_mode": split_mode,
+            "split_col": split_col,
             "models_tested": selected_models,
             "no_of_iterations": n_iter,
             "best_model_type": str(model.named_steps["model"]),
