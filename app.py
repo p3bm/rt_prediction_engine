@@ -167,7 +167,7 @@ if file:
         if mode == "Random Search":
             model, search = train_model(
                 X_train_proc,
-                y_train_proc,
+                y_train,
                 seed,
                 selected_models=selected_models,
                 n_iter=n_iter
@@ -177,7 +177,7 @@ if file:
         else:
             model = fit_model_with_params(
                 X_train_proc,
-                y_train_proc,
+                y_train,
                 seed,
                 model_key=model_choice,
                 best_params=best_params
@@ -185,7 +185,7 @@ if file:
             search = None
             best_params_clean = best_params
 
-        results = evaluate(model, X_train_proc, X_test_proc, y_train_proc, y_test_proc)
+        results = evaluate(model, X_train_proc, X_test_proc, y_train, y_test)
 
         st.write(f"Training set RMSE: {results['rmse_train']}")
         st.write(f"Test set RMSE: {results['rmse_test']}")
@@ -193,11 +193,11 @@ if file:
         st.write(f"Test set R2: {results['r2_test']}")
 
         # Plots
-        fig1 = parity_plot(y_test_proc, results["y_pred_test"])
+        fig1 = parity_plot(y_test, results["y_pred_test"])
         st.pyplot(fig1)
 
         X_scaled = model.named_steps["scaler"].transform(X_test_proc)
-        h, h_star, std_res, flags = applicability_domain(X_scaled, y_test_proc, results["y_pred_test"])
+        h, h_star, std_res, flags = applicability_domain(X_scaled, y_test, results["y_pred_test"])
         fig2 = williams_plot(h, std_res, h_star)
         st.pyplot(fig2)
 
@@ -216,7 +216,7 @@ if file:
 
         # CI
         if ci_toggle:
-            lower, upper = bootstrap_ci(model, X_train_proc, y_train_proc, X_test_proc)
+            lower, upper = bootstrap_ci(model, X_train_proc, y_train, X_test_proc)
             ci_width = upper - lower
             mean_ci_width = np.mean(ci_width)
             rel_uncertainty = ci_width / np.abs(results["y_pred_test"])
