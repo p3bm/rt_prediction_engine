@@ -159,6 +159,8 @@ if file:
 
         results = evaluate(model, X_train, X_test, y_train, y_test)
 
+        st.write(f"Training set RMSE: {results['rmse_train']}")
+        st.write(f"Test set RMSE: {results['rmse_test']}")
         st.write(f"Training set R2: {results['r2_train']}")
         st.write(f"Test set R2: {results['r2_test']}")
 
@@ -216,6 +218,8 @@ if file:
             "dataset_filename": file.name if file else None,
             "r2_train": results["r2_train"],
             "r2_test": results["r2_test"],
+            "rmse_train": results["rmse_train"],
+            "rmse_test": results["rmse_test"],
             "n_features": X.shape[1],
             "filters": filters ,
             "models_tested": selected_models,
