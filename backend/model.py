@@ -150,7 +150,7 @@ def train_model(
         pipe,
         param_distributions=param_dist,
         n_iter=n_iter,
-        scoring="r2",
+        scoring="neg_root_mean_squared_error",
         cv=cv_strategy,
         n_jobs=-1,
         random_state=seed,
