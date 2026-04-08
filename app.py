@@ -187,6 +187,7 @@ if file:
         # CI
         if ci_toggle:
             lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
+            ci_width = upper - lower
             mean_ci_width = np.mean(ci_width)
             rel_uncertainty = ci_width / np.abs(results["y_pred_test"])
             st.write("Mean CI width:", mean_ci_width)
