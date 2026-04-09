@@ -228,8 +228,9 @@ if file:
             ci_width = upper - lower
             mean_ci_width = np.mean(ci_width)
             rel_uncertainty = ci_width / np.abs(results["y_pred_test"])
+            mean_rel_uncertainty = np.mean(rel_uncertainty)
             st.write("Mean CI width:", mean_ci_width)
-            st.write("Relative uncertainty:", rel_uncertainty)
+            st.write("Mean relative uncertainty:", mean_rel_uncertainty)
         else:
             mean_ci_width = None
             rel_uncertainty = None
@@ -265,7 +266,7 @@ if file:
             "best_model_type": str(model.named_steps["model"]),
             "best_params": best_params_clean,
             "Mean CI width": mean_ci_width,
-            "Relative uncertainty": rel_uncertainty,
+            "Mean relative uncertainty": mean_rel_uncertainty,
             "manually_dropped_columns": drop_cols,
             "stratified_by": stratify if stratify != "None" else None,
             "grouped_by": group if group != "None" else None,
