@@ -233,7 +233,7 @@ if file:
             st.write("Mean relative uncertainty:", mean_rel_uncertainty)
         else:
             mean_ci_width = None
-            rel_uncertainty = None
+            mean_rel_uncertainty = None
 
         run_dir = create_run_dir()
         
