@@ -148,9 +148,6 @@ if file:
                 split_ratio,
                 seed
             )
-
-            X_train_proc, var_sel, drop_corr, feature_names = fit_preprocessing(X_train, target, drop_cols, var_thresh, corr_thresh)
-            X_test_proc = transform_preprocessing(X_test, target, drop_cols, var_sel, drop_corr, feature_names)
             
         else:
             train_df, test_df = custom_flag_split(df, flag_col=split_col)
@@ -169,9 +166,6 @@ if file:
             X_test = test_df.drop(columns=[target] + drop_cols, errors="ignore")
             X_test = X_test.select_dtypes(include=[np.number])
 
-            X_train_proc, var_sel, drop_corr, feature_names = fit_preprocessing(X_train, target, drop_cols, var_thresh, corr_thresh)
-            X_test_proc = transform_preprocessing(X_test, target, drop_cols, var_sel, drop_corr, feature_names)
-
         if mode == "Random Search":
             model, search = train_model(
                 X_train_proc,
@@ -188,12 +182,14 @@ if file:
                 y_train,
                 seed,
                 model_key=model_choice,
-                best_params=best_params
+                best_params=best_params,
+                var_thresh,
+                corr_thresh,
             )
             search = None
             best_params_clean = best_params
 
-        results = evaluate(model, X_train_proc, X_test_proc, y_train, y_test)
+        results = evaluate(model, X_train, X_test, y_train, y_test)
 
         st.write(f"Training set RMSE: {results['rmse_train']}")
         st.write(f"Test set RMSE: {results['rmse_test']}")
@@ -204,8 +200,16 @@ if file:
         fig1 = parity_plot(y_test, results["y_pred_test"])
         st.pyplot(fig1)
 
-        X_scaled = model.named_steps["scaler"].transform(X_test_proc)
-        h, h_star, std_res, flags = applicability_domain(X_scaled, y_test, results["y_pred_test"])
+        # Apply full preprocessing pipeline (excluding final model)
+        X_processed = model[:-1].transform(X_test)
+        
+        # Compute leverage + Williams plot
+        h, h_star, std_res, flags = applicability_domain(
+            X_processed,
+            y_test,
+            results["y_pred_test"]
+        )
+        
         fig2 = williams_plot(h, std_res, h_star)
         st.pyplot(fig2)
 
