@@ -172,7 +172,9 @@ if file:
                 y_train,
                 seed,
                 selected_models=selected_models,
-                n_iter=n_iter
+                n_iter=n_iter,
+                var_thresh=var_thresh,
+                corr_thresh=corr_thresh
             )
             best_params_clean = clean_params(search.best_params_)
         
