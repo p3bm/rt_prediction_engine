@@ -9,6 +9,28 @@ from catboost import CatBoostRegressor
 import pandas as pd
 
 def base_pipe(model, var_thresh, corr_thresh):
+    return Pipeline([
+        ("var", VarianceThreshold(var_thresh)),
+        ("corr", CorrelationFilter(corr_thresh)),
+        ("scaler", StandardScaler()),
+        ("model", model)
+    ])
+
+
+def get_model_space(seed, selected_models, var_thresh, corr_thresh):
+    model_space = []
+
+    if "ridge" in selected_models:
+        model_space.append({
+            "model": [base_pipe(Ridge(), var_thresh, corr_thresh)],
+            "model__model__alpha": np.logspace(-3, 3, 50)
+        })
+
+    if "lasso" in selected_models:
+        model_space.append({
+            "model": [base_pipe(Lasso(max_iter=10000), var_thresh, corr_thresh)],
+            "model__model__alpha": np.logspace(-4, 1, 50)
+        })
 
     if "elasticnet" in selected_models:
         model_space.append({
