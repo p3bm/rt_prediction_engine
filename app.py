@@ -178,7 +178,7 @@ if file:
         
         else:
             model = fit_model_with_params(
-                X_train_proc,
+                X_train,
                 y_train,
                 seed,
                 model_key=model_choice,
