@@ -3,6 +3,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_selection import VarianceThreshold
 from data import CorrelationFilter
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.linear_model import Ridge, Lasso, ElasticNet
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from lightgbm import LGBMRegressor
