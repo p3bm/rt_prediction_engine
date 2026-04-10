@@ -89,3 +89,48 @@ def train_model(X_train, y_train, seed, selected_models, var_thresh, corr_thresh
     search.fit(X_train, y_train)
 
     return search.best_estimator_, search
+
+def fit_model_with_params(
+    X_train,
+    y_train,
+    seed,
+    model_key,
+    best_params,
+    var_thresh,
+    corr_thresh
+):
+    """
+    Fit a model using fixed parameters with FULL pipeline (no leakage).
+
+    Must mirror the pipeline used during RandomizedSearchCV.
+    """
+
+    # Map model key to actual model
+    model_map = {
+        "ridge": Ridge(),
+        "lasso": Lasso(max_iter=10000),
+        "elasticnet": ElasticNet(max_iter=10000),
+        "rf": RandomForestRegressor(random_state=seed),
+        "gbr": GradientBoostingRegressor(random_state=seed),
+        "lgbm": LGBMRegressor(random_state=seed, verbose=-1),
+        "catboost": CatBoostRegressor(random_state=seed, verbose=0),
+    }
+
+    if model_key not in model_map:
+        raise ValueError(f"Invalid model_key: {model_key}")
+
+    # ✅ FULL pipeline (same as training)
+    pipe = Pipeline([
+        ("var", VarianceThreshold(var_thresh)),
+        ("corr", CorrelationFilter(corr_thresh)),
+        ("scaler", StandardScaler()),
+        ("model", model_map[model_key])
+    ])
+
+    # ✅ Apply parameters (already in pipeline format)
+    pipe.set_params(**best_params)
+
+    # Fit model
+    pipe.fit(X_train, y_train)
+
+    return pipe
