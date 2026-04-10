@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import RandomizedSearchCV, GroupShuffleSplit, StratifiedShuffleSplit
 
 class CorrelationFilter(BaseEstimator, TransformerMixin):
     def __init__(self, threshold=0.95):
