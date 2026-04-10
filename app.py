@@ -168,7 +168,7 @@ if file:
 
         if mode == "Random Search":
             model, search = train_model(
-                X_train_proc,
+                X_train,
                 y_train,
                 seed,
                 selected_models=selected_models,
