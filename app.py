@@ -183,8 +183,8 @@ if file:
                 seed,
                 model_key=model_choice,
                 best_params=best_params,
-                var_thresh,
-                corr_thresh,
+                var_thresh=var_thresh,
+                corr_thresh=corr_thresh,
             )
             search = None
             best_params_clean = best_params
