@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.pipeline import Pipeline
+from sklearn.feature_selection import VarianceThreshold
+from data import CorrelationFilter
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Ridge, Lasso, ElasticNet
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
