@@ -307,3 +307,6 @@ if file:
         if shap_toggle:
             shap_fig.savefig(shap_path, dpi=300)
             selected_features.to_csv(selected_features_path, sep=",", index=False)
+        if feature_selection:
+            feature_list_path = f"{run_dir}/feature_list_for_filtering.csv"
+            features_to_use.to_csv(feature_list_path, sep=",", index=False)
