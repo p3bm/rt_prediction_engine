@@ -77,8 +77,20 @@ def train_model(X_train, y_train, seed, selected_models, var_thresh, corr_thresh
 
     param_dist = get_model_space(seed, selected_models, var_thresh, corr_thresh)
 
+    preprocessor = Pipeline([
+        ("var", VarianceThreshold(var_thresh)),
+        ("corr", CorrelationFilter(corr_thresh)),
+        ("scaler", StandardScaler()),
+        ("model", model_map[model_key])
+    ])
+
+    pipe = Pipeline([
+        ("preprocessor", preprocessor),
+        ("model", Ridge())  # placeholder, will be swapped by RandomizedSearchCV
+    ])
+
     search = RandomizedSearchCV(
-        estimator=Pipeline([("model", Ridge())]),
+        estimator=pipe,
         param_distributions=param_dist,
         n_iter=n_iter,
         scoring="neg_root_mean_squared_error",
