@@ -219,11 +219,7 @@ if file:
         if shap_toggle:
             X_sample = X_test.sample(min(100, len(X_test_proc)), random_state=seed)
             
-            shap_values, X_sample_named = compute_shap(
-                model,
-                X_sample,
-                feature_names
-            )
+            shap_values, X_sample_named = compute_shap(model, X_train, sample_size=100, seed=seed)
             
             shap_fig = shap_summary_plot(shap_values, X_sample_named)
             st.pyplot(shap_fig)
