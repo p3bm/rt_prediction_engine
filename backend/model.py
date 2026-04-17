@@ -58,14 +58,48 @@ def get_model_space(seed, selected_models, var_thresh, corr_thresh):
     if "lgbm" in selected_models:
         model_space.append({
             "model": [base_pipe(LGBMRegressor(random_state=seed, verbose=-1), var_thresh, corr_thresh)],
-            "model__model__n_estimators": [200, 500],
-            "model__model__learning_rate": [0.01, 0.05, 0.1]
+            # Core boosting
+            "model__model__n_estimators": [200, 500, 1000],
+            "model__model__learning_rate": [0.005, 0.01, 0.05, 0.1],
+    
+            # Tree structure
+            "model__model__num_leaves": [15, 31, 63, 127],
+            "model__model__max_depth": [-1, 5, 10, 20],
+    
+            # Regularisation
+            "model__model__min_child_samples": [5, 10, 20, 50],
+            "model__model__min_child_weight": [1e-3, 1e-2, 1e-1],
+            "model__model__reg_alpha": [0, 0.1, 1, 10],
+            "model__model__reg_lambda": [0, 0.1, 1, 10],
+    
+            # Sampling (important for generalisation)
+            "model__model__subsample": [0.6, 0.8, 1.0],
+            "model__model__subsample_freq": [0, 1],
+            "model__model__colsample_bytree": [0.6, 0.8, 1.0]
         })
 
     if "catboost" in selected_models:
         model_space.append({
             "model": [base_pipe(CatBoostRegressor(random_state=seed, verbose=0), var_thresh, corr_thresh)],
-            "model__model__iterations": [300, 600]
+            # Core boosting
+            "model__model__iterations": [300, 600, 1000],
+            "model__model__learning_rate": [0.01, 0.03, 0.1],
+    
+            # Tree structure
+            "model__model__depth": [4, 6, 8, 10],
+    
+            # Regularisation
+            "model__model__l2_leaf_reg": [1, 3, 5, 10],
+    
+            # Sampling / randomness
+            "model__model__subsample": [0.6, 0.8, 1.0],
+            "model__model__rsm": [0.6, 0.8, 1.0],  # feature sampling
+    
+            # Boosting randomness
+            "model__model__bagging_temperature": [0, 0.5, 1, 5],
+    
+            # Border handling (important for continuous features)
+            "model__model__border_count": [32, 64, 128]
         })
 
     return model_space
