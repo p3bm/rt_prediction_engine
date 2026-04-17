@@ -224,6 +224,20 @@ if file:
             shap_fig = shap_summary_plot(shap_values, X_sample_named)
             st.pyplot(shap_fig)
 
+            shap_importance = np.abs(shap_values).mean(axis=0)
+
+            feature_importance_df = pd.DataFrame({
+                "feature": X.columns,
+                "importance": shap_importance
+            }).sort_values(by="importance", ascending=False)
+
+            feature_importance_df["cumulative"] = (
+                feature_importance_df["importance"].cumsum() /
+                feature_importance_df["importance"].sum()
+            )
+            
+            selected_features = feature_importance_df[feature_importance_df["cumulative"] <= 0.95]["feature"]
+            
         # CI
         if ci_toggle:
             lower, upper = bootstrap_ci(model, X_train, y_train, X_test)
@@ -247,6 +261,8 @@ if file:
 
         if shap_toggle:
             shap_path = f"{run_dir}/shap.png"
+            selected_features_path = f"{run_dir}/selected_features.csv"
+            
         if search is not None:
             cv_df = pd.DataFrame(search.cv_results_)
             cv_df.to_csv(cv_path, index=False)
@@ -280,3 +296,4 @@ if file:
         fig2.savefig(williams_path, dpi=300)
         if shap_toggle:
             shap_fig.savefig(shap_path, dpi=300)
+            selected_features.to_csv(selected_features_path, sep=",", index=False)
