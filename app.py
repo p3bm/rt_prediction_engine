@@ -259,7 +259,7 @@ if file:
             "r2_test": results["r2_test"],
             "rmse_train": results["rmse_train"],
             "rmse_test": results["rmse_test"],
-            "n_features": X_train_proc.shape[1],
+            "n_features": X_train.shape[1],
             "filters": filters ,
             "split_mode": split_mode,
             "split_col": split_col,
