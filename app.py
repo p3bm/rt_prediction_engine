@@ -119,8 +119,9 @@ if file:
 
     if feature_selection:
         selected_features_file = st.file_uploader("Upload previously generated selected_features CSV file", type="csv")
-        features_to_use = pd.read_csv(selected_features_files, sep=",")
-        feature_list = features_to_use["feature"].to_list()
+        if selected_features_file:
+            features_to_use = pd.read_csv(selected_features_file, sep=",")
+            feature_list = features_to_use["feature"].to_list()
     
     shap_toggle = st.toggle("Perform SHAP Analysis")
     ci_toggle = st.toggle("Calculate confidence interval (takes a long time)")
