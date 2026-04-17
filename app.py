@@ -114,6 +114,13 @@ if file:
             except Exception as e:
                 st.error(f"Invalid JSON: {e}")
                 st.stop()
+
+    feature_selection = st.toggle("Enable feature selection")
+
+    if feature_selection:
+        selected_features_file = st.file_uploader("Upload previously generated selected_features CSV file", type="csv")
+        features_to_use = pd.read_csv(selected_features_files, sep=",")
+        feature_list = features_to_use["feature"].to_list()
     
     shap_toggle = st.toggle("Perform SHAP Analysis")
     ci_toggle = st.toggle("Calculate confidence interval (takes a long time)")
@@ -166,6 +173,10 @@ if file:
             X_test = test_df.drop(columns=[target] + drop_cols, errors="ignore")
             X_test = X_test.select_dtypes(include=[np.number])
 
+        if feature_selection:
+                X_train = X_train[feature_list]
+                X_test = X_test[feature_list]
+        
         if mode == "Random Search":
             model, search = train_model(
                 X_train,
@@ -216,15 +227,13 @@ if file:
         st.pyplot(fig2)
 
         # SHAP
-        if shap_toggle:
-            X_sample = X_test.sample(min(100, len(X_test)), random_state=seed)
-            
+        if shap_toggle:          
             shap_values, X_sample_named = compute_shap(model, X_train, sample_size=100, seed=seed)
             
             shap_fig = shap_summary_plot(shap_values, X_sample_named)
             st.pyplot(shap_fig)
 
-            shap_importance = np.abs(shap_values).mean(axis=0)
+            shap_importance = np.abs(shap_values.values).mean(axis=0)
 
             feature_importance_df = pd.DataFrame({
                 "feature": X.columns,
