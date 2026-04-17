@@ -179,6 +179,8 @@ if file:
                 X_test = X_test[feature_list]
         
         if mode == "Random Search":
+            if selected_models == []:
+                st.error("Please select models for training.")
             model, search = train_model(
                 X_train,
                 y_train,
