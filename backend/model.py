@@ -77,16 +77,11 @@ def train_model(X_train, y_train, seed, selected_models, var_thresh, corr_thresh
 
     param_dist = get_model_space(seed, selected_models, var_thresh, corr_thresh)
 
-    preprocessor = Pipeline([
+    pipe = Pipeline([
         ("var", VarianceThreshold(var_thresh)),
         ("corr", CorrelationFilter(corr_thresh)),
         ("scaler", StandardScaler()),
-        ("model", model_map[model_key])
-    ])
-
-    pipe = Pipeline([
-        ("preprocessor", preprocessor),
-        ("model", Ridge())  # placeholder, will be swapped by RandomizedSearchCV
+        ("model", Ridge())
     ])
 
     search = RandomizedSearchCV(
@@ -133,7 +128,7 @@ def fit_model_with_params(
     if model_key not in model_map:
         raise ValueError(f"Invalid model_key: {model_key}")
 
-    # ✅ FULL pipeline (same as training)
+    # ? FULL pipeline (same as training)
     pipe = Pipeline([
         ("var", VarianceThreshold(var_thresh)),
         ("corr", CorrelationFilter(corr_thresh)),
@@ -141,7 +136,7 @@ def fit_model_with_params(
         ("model", model_map[model_key])
     ])
 
-    # ✅ Apply parameters (already in pipeline format)
+    # ? Apply parameters (already in pipeline format)
     pipe.set_params(**best_params)
 
     # Fit model
